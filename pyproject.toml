@@ -1,13 +1,20 @@
-[build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "ai_scripts"
+description = "Scripts to interact with various AIs"
+version = "0.1.0"
+authors = ["Tobias Walle"]
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = ["openai~=1.6.1", "rich~=13.7.0", "tiktoken~=0.5.2"]
-dynamic = ["version"]
+packages = [{ include = "ai_scripts" }]
 
-[project.scripts]
+[tool.poetry.scripts]
 ask-workspace = "ai_scripts.ask_workspace:main"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+openai = "^1.6.1"
+rich = "^13.7.0"
+tiktoken = "^0.5.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
