@@ -13,10 +13,12 @@ import re
 from rich.markdown import Markdown
 from rich import print
 import json
-import os
 from pathlib import Path
 import tiktoken
 from tiktoken.core import Encoding
+
+from ai_scripts.agent import Agent
+from ai_scripts.model import TogetherAIMistral8x7BModel
 
 # TOTAL TOKENS WITH MIXTRAL ARE 32K
 TOKEN_LIMIT_FILES = 5000
@@ -29,38 +31,58 @@ def main():
     prompt = sys.argv[1]
     content = Content(prompt=prompt)
 
+    keyword_agent = Agent(
+        model=TogetherAIMistral8x7BModel(),
+        system_prompt=(
+            "You are an expert programmer and code search expert.\n"
+            "You are given a prompt and are answering with a LIST OF SINGLE WORD, LOWERCASE SEARCH TERMS for finding related content via grep.\n"
+            "As search terms try to include related topics that might be used in related code and documentation.\n"
+            "In the prompt you are also getting a list of files in the project you can use to determine the used technlogies and therefore improve the relevance of the search terms.\n"
+            "Answer with at LEAST 5 AND NOT MORE THAN 10 search terms seperated by space.\n"
+            "DO NOT INCLUDE ANY OTHER TEXT, NOTES OR EXPLAINATIONS IN YOUR ANSWER!\n"
+        ),
+        temperature=1.3,
+        top_p=0.1,
+        presence_penalty=1.5,
+    )
+    file_paths_agent = Agent(
+        model=TogetherAIMistral8x7BModel(),
+        system_prompt=(
+            "You are an expert programmer.\n"
+            "You are given a prompt and some context and are answering ONLY with a LIST OF FILE PATHS AS A JSON ARRAY with content that might be relevant to answer the question.\n"
+            "Do not include files that cannot be relevant like images (svg, png, jpeg, etc).\n"
+            "Do not include files that probably contain data or secrets (csv, env, etc.).\n"
+            "ONLY ANSWER WITH EXISTING FILE PATHS RELATIVE TO THE ROOT OF THE PROJECT STARTING WITH ./ AS A JSON ARRAY!\n"
+            "SORT THE FILES BY RELEVANCE. START WITH THE MOST RELEVANT FILE AND END WITH THE LEAST RELEVANT.\n"
+            "ONLY ANSWER WITH THE JSON ARRAY OF FILES, DO NOT ANSWER THE PROMPT DIRECTLY!"
+        ),
+        temperature=1,
+        top_p=0.1,
+        presence_penalty=1.5,
+    )
+    final_answer_agent = Agent(
+        model=TogetherAIMistral8x7BModel(),
+        system_prompt=(
+            "You are an expert programmer.\n"
+            "You are given a prompt and some context and are answering the question in the prompt based on the given informations.\n"
+            "ANSWER IN MARKDOWN.\n"
+            "EXPLAIN THE SOURCE FOR YOUR ANSWER.\n"
+            "BE CLEAR ABOUT THAT INFORMATION YOU HAVE AND WHAT INFORMATION YOU INTERPRETED BASED ON THE CONTEXT."
+        ),
+        temperature=0.8,
+        top_p=0.8,
+        presence_penalty=0.8,
+    )
+
     print_step("Add file paths to context")
     files = run_cmd(["eza", "-R", "--git-ignore", "--icons=never"])
     content.add_context("FILES", files, TOKEN_LIMIT_FILES)
 
     print_step("Get relevant keywords")
-    answer = ask_mixtral_8_7B(
-        [
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert programmer and code search expert.\n"
-                    "You are given a prompt and are answering with a LIST OF SINGLE WORD, LOWERCASE SEARCH TERMS for finding related content via grep.\n"
-                    "As search terms try to include related topics that might be used in related code and documentation.\n"
-                    "In the prompt you are also getting a list of files in the project you can use to determine the used technlogies and therefore improve the relevance of the search terms.\n"
-                    "Answer with at LEAST 5 AND NOT MORE THAN 10 search terms seperated by space.\n"
-                    "DO NOT INCLUDE ANY OTHER TEXT, NOTES OR EXPLAINATIONS IN YOUR ANSWER!\n"
-                ),
-            },
-            {"role": "user", "content": str(content)},
-        ]
-    )
-
-    readme_path = Path("./README.md")
-    if readme_path.exists():
-        print_step("Add README.md to context")
-        readme_content = readme_path.read_text()
-        content.add_context("README", readme_content, TOKEN_LIMIT_README)
-
-    keywords = answer.choices[0].message.content or ""
-    keywords = re.sub(r""""'`""", "", keywords)
+    answer = keyword_agent.prompt(str(content))
+    keywords = re.sub(r""""'`""", "", answer)
     keywords = re.split(r"[_\-\s]+", keywords)[:10]
-    print_step(f"Search for keywords: [bright_cyan]{" ".join(keywords)}[/bright_cyan]")
+    print_step(f"Search for keywords: [bright_cyan]{' '.join(keywords)}[/bright_cyan]")
     search = ""
     for i, keyword in enumerate(keywords):
         already_used_tokens_search = number_of_tokens(search)
@@ -75,35 +97,21 @@ def main():
         )
     content.add_context("SEARCH RESULT RELEVANT KEYWORDS", search, TOKEN_LIMIT_SEARCH)
 
+    readme_path = Path("./README.md")
+    if readme_path.exists():
+        print_step("Add README.md to context")
+        readme_content = readme_path.read_text()
+        content.add_context("README", readme_content, TOKEN_LIMIT_README)
+
     print_step("Get relevant files")
-    answer = ask_mixtral_8_7B(
-        [
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert programmer.\n"
-                    "You are given a prompt and some context and are answering ONLY with a LIST OF FILE PATHS AS A JSON ARRAY with content that might be relevant to answer the question.\n"
-                    "Do not include files that cannot be relevant like images (svg, png, jpeg, etc).\n"
-                    "Do not include files that probably contain data or secrets (csv, env, etc.).\n"
-                    "ONLY ANSWER WITH EXISTING FILE PATHS RELATIVE TO THE ROOT OF THE PROJECT STARTING WITH ./ AS A JSON ARRAY!\n"
-                    "SORT THE FILES BY RELEVANCE. START WITH THE MOST RELEVANT FILE AND END WITH THE LEAST RELEVANT.\n"
-                    "ONLY ANSWER WITH THE JSON ARRAY OF FILES, DO NOT ANSWER THE PROMPT DIRECTLY!"
-                ),
-            },
-            {
-                "role": "user",
-                "content": str(content),
-            },
-        ]
-    )
-    answer = answer.choices[0].message.content or ""
+    answer = file_paths_agent.prompt(str(content))
     try:
         file_paths = json.loads(answer)
     except Exception:
         print_status("No valid JSON list of files provided")
         print(Markdown(answer))
         return
-    print_step(f"Look into files: [bright_cyan]{" ".join(file_paths)}[/bright_cyan]")
+    print_step(f"Look into files: [bright_cyan]{' '.join(file_paths)}[/bright_cyan]")
     files = []
     for file_path in file_paths:
         if os.path.splitext(file_path)[1] in ("svg", "csv"):
@@ -124,27 +132,9 @@ def main():
         "CONTENT OF SOME RELEVANT FILES", files_context, TOKEN_LIMIT_FILE_CONTENT
     )
 
-    print_step(f"Get final answer")
-    answer = ask_mixtral_8_7B(
-        [
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert programmer.\n"
-                    "You are given a prompt and some context and are answering the question in the prompt based on the given informations.\n"
-                    "ANSWER IN MARKDOWN.\n"
-                    "EXPLAIN THE SOURCE FOR YOUR ANSWER.\n"
-                    "BE CLEAR ABOUT THAT INFORMATION YOU HAVE AND WHAT INFORMATION YOU INTERPRETED BASED ON THE CONTEXT."
-                ),
-            },
-            {
-                "role": "user",
-                "content": str(content),
-            },
-        ]
-    )
+    print_step("Get final answer")
+    answer = final_answer_agent.prompt(str(content))
     print()
-    answer = answer.choices[0].message.content or ""
     print(Markdown(answer))
 
 
