@@ -1,5 +1,5 @@
 from typing import Optional
-from ai_scripts.model import Model
+from ai_scripts.lib.model import Model
 
 
 class Agent:

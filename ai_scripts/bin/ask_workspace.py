@@ -1,24 +1,19 @@
 #!/usr/bin/env python3
 from dataclasses import dataclass, field
 from typing import List
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionMessageParam,
-)
-from openai import OpenAI
 import os
-import subprocess
 import re
 from rich.markdown import Markdown
-from rich import print
 import json
 from pathlib import Path
-import tiktoken
-from tiktoken.core import Encoding
 import argparse
 
-from ai_scripts.agent import Agent
-from ai_scripts.model import TogetherAIMistral8x7BModel
+from ai_scripts.lib.logging import print, print_step, print_error, print_status
+from ai_scripts.lib.agent import Agent
+from ai_scripts.lib.model import TogetherAIMistral8x7BModel
+from ai_scripts.lib.fs import grep_keyword
+from ai_scripts.lib.sh import run_cmd
+from ai_scripts.lib.tokenizing import limit_tokens, number_of_tokens
 
 # TOTAL TOKENS WITH MIXTRAL ARE 32K
 TOKEN_LIMIT_FILES = 5000
@@ -163,111 +158,6 @@ class Content:
     def __str__(self):
         context = "\n\n".join(self.context)
         return f"{context}\n\n--- PROMPT ---\n{self.prompt}"
-
-
-def print_step(msg: str):
-    print(f"[grey74]> {msg}[/]")
-
-
-def print_status(msg: str):
-    print(f"[grey54]- {msg}[/]")
-
-
-def print_error(msg: str):
-    print(f"[bright_red]- ERROR: {msg}[/]")
-
-
-def grep_keyword(keyword: str) -> str:
-    if Path("./.git").exists():
-        return run_cmd(
-            [
-                "git",
-                "grep",
-                "--max-count=8",
-                "--show-function",
-                "--heading",
-                "--line-number",
-                "--break",
-                "--ignore-case",
-                "--context=1",
-                keyword,
-                "--",
-                ":!.*",
-            ]
-        )
-    else:
-        # Fallback to ripgrep if it isn't a git repository
-        result = run_cmd(
-            [
-                "rg",
-                "--max-count=8",
-                "--heading",
-                "--line-number",
-                "--smart-case",
-                "--context=1",
-                "--max-columns=100",
-                "--max-columns-preview",
-                keyword,
-                ".",
-            ]
-        )
-        result.replace("[... omitted end of long line]", "[...]")
-        return result
-
-
-def run_cmd(cmd: List[str]) -> str:
-    return subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")
-
-
-def number_of_tokens(text: str) -> int:
-    return len(token_encoding().encode(text))
-
-
-def limit_tokens(text: str, limit: int) -> str:
-    encoding = token_encoding()
-    tokens = encoding.encode(text)
-    tokens = tokens[:limit]
-    return encoding.decode(tokens)
-
-
-def token_encoding() -> Encoding:
-    return tiktoken.encoding_for_model("gpt-4-1106-preview")
-
-
-def ask_mixtral_8_7B(
-    messages: List[ChatCompletionMessageParam],
-) -> ChatCompletion:
-    return together_client().chat.completions.create(
-        model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-        messages=messages,
-        max_tokens=1024,
-        temperature=1.5,
-        top_p=0.9,
-        presence_penalty=1.25,
-    )
-
-
-def ask_gpt_4_turbo(
-    messages: List[ChatCompletionMessageParam],
-) -> ChatCompletion:
-    return openai_client().chat.completions.create(
-        model="gpt-4-1106-preview",
-        messages=messages,
-        max_tokens=1024,
-    )
-
-
-def together_client() -> OpenAI:
-    return OpenAI(
-        api_key=os.getenv("TOGETHER_API_TOKEN"),
-        base_url="https://api.together.xyz/v1",
-    )
-
-
-def openai_client() -> OpenAI:
-    return OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY"),
-    )
 
 
 if __name__ == "__main__":
