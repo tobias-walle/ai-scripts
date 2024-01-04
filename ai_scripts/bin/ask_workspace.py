@@ -8,7 +8,13 @@ import json
 from pathlib import Path
 import argparse
 
-from ai_scripts.lib.logging import print, print_step, print_error, print_status
+from ai_scripts.lib.logging import (
+    print,
+    print_step,
+    print_error,
+    print_status,
+    print_stream,
+)
 from ai_scripts.lib.agent import Agent
 from ai_scripts.lib.model import TogetherAIMistral8x7BModel
 from ai_scripts.lib.fs import grep_keyword
@@ -83,7 +89,7 @@ def main():
     content.add_context("FILES", files, TOKEN_LIMIT_FILES)
 
     print_step("Get relevant keywords")
-    answer = keyword_agent.prompt(str(content))
+    answer = keyword_agent.complete(str(content))
     keywords = re.sub(r""""'`""", "", answer)
     keywords = re.split(r"[_\-\s]+", keywords)[:10]
     print_step(f"Search for keywords: [bright_cyan]{' '.join(keywords)}[/bright_cyan]")
@@ -108,7 +114,7 @@ def main():
         content.add_context("README", readme_content, TOKEN_LIMIT_README)
 
     print_step("Get relevant files")
-    answer = file_paths_agent.prompt(str(content))
+    answer = file_paths_agent.complete(str(content))
     try:
         file_paths = json.loads(answer)
     except Exception:
@@ -137,9 +143,9 @@ def main():
     )
 
     print_step("Get final answer")
-    answer = final_answer_agent.prompt(str(content))
+    answer = final_answer_agent.stream(str(content))
     print()
-    print(Markdown(answer))
+    print_stream(answer, Markdown)
 
 
 @dataclass

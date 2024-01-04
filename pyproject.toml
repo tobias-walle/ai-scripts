@@ -9,6 +9,7 @@ packages = [{ include = "ai_scripts" }]
 [tool.poetry.scripts]
 ask-workspace = "ai_scripts.bin.ask_workspace:main"
 how = "ai_scripts.bin.how:main"
+explain = "ai_scripts.bin.explain:main"
 
 [tool.poetry.dependencies]
 python = ">=3.11"

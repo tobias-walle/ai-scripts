@@ -1,60 +1,92 @@
 import os
-from typing import List, Optional, Protocol, TypeVar
+from typing import (
+    Iterable,
+    List,
+    NotRequired,
+    Protocol,
+    TypedDict,
+    Unpack,
+)
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 
+class ChatOptions(TypedDict):
+    max_tokens: NotRequired[int]
+    temperature: NotRequired[float]
+    top_p: NotRequired[float]
+    presence_penalty: NotRequired[float]
+
+
 class Model(Protocol):
-    def chat(
+    def complete(
         self,
         messages: List[ChatCompletionMessageParam],
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        presence_penalty: Optional[float] = None,
+        **kwargs: Unpack[ChatOptions],
     ) -> str:
         ...
 
-
-class TogetherAIMistral8x7BModel(Model):
-    def chat(
+    def stream(
         self,
-        messages,
-        max_tokens=None,
-        temperature=None,
-        top_p=None,
-        presence_penalty=None,
-    ) -> str:
-        answer = _together_client().chat.completions.create(
-            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+        messages: List[ChatCompletionMessageParam],
+        **kwargs: Unpack[ChatOptions],
+    ) -> Iterable[str]:
+        ...
+
+
+class _OpenAICompatibleModel(Model, Protocol):
+    def complete(self, messages, **kwargs):
+        answer = self._client().chat.completions.create(
+            model=self._model(),
             messages=messages,
-            max_tokens=_default_value(max_tokens, 1024),
-            temperature=_default_value(temperature, 1),
-            top_p=_default_value(top_p, 1),
-            presence_penalty=_default_value(presence_penalty, 1),
+            stream=False,
+            **self._options(kwargs),
         )
         return answer.choices[0].message.content or ""
 
-
-class OpenAIGPT4TurboModel(Model):
-    def chat(
-        self,
-        messages,
-        max_tokens=None,
-        temperature=None,
-        top_p=None,
-        presence_penalty=None,
-    ) -> str:
-        answer = _openai_client().chat.completions.create(
-            model="gpt-4-1106-preview",
+    def stream(self, messages, **kwargs):
+        stream = self._client().chat.completions.create(
+            model=self._model(),
             messages=messages,
-            max_tokens=_default_value(max_tokens, 1024),
-            temperature=_default_value(temperature, 1),
-            top_p=_default_value(top_p, 1),
-            presence_penalty=_default_value(presence_penalty, 1),
+            stream=True,
+            **self._options(kwargs),
         )
-        return answer.choices[0].message.content or ""
+        return (
+            chunk.choices[0].delta.content
+            for chunk in stream
+            if chunk.choices[0].delta.content is not None
+        )
+
+    def _options(self, options) -> ChatOptions:
+        return {
+            "max_tokens": options.pop("max_tokens", 1024),
+            "temperature": options.pop("temperature", 1),
+            "top_p": options.pop("top_p", 1),
+            "presence_penalty": options.pop("presence_penalty", 1),
+        }
+
+    def _model(self) -> str:
+        ...
+
+    def _client(self) -> OpenAI:
+        ...
+
+
+class TogetherAIMistral8x7BModel(_OpenAICompatibleModel):
+    def _model(self):
+        return "mistralai/Mixtral-8x7B-Instruct-v0.1"
+
+    def _client(self):
+        return _together_client()
+
+
+class OpenAIGPT4TurboModel(_OpenAICompatibleModel):
+    def _model(self):
+        return "gpt-4-1106-preview"
+
+    def _client(self):
+        return _openai_client()
 
 
 def _together_client() -> OpenAI:
@@ -68,10 +100,3 @@ def _openai_client() -> OpenAI:
     return OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
     )
-
-
-T = TypeVar("T")
-
-
-def _default_value(value: Optional[T], default: T) -> T:
-    return default if value is None else value

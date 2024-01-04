@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
 import os
-import argparse
+import sys
 import pyperclip
 
-from ai_scripts.lib.logging import print
+from ai_scripts.lib.logging import print_stream
 from ai_scripts.lib.agent import Agent
 from ai_scripts.lib.model import OpenAIGPT4TurboModel
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog="how",
-        description="Output a shell command based on the prompt",
-    )
-    parser.add_argument("prompt", nargs="+")
-    args = parser.parse_args()
-    prompt = " ".join(args.prompt)
+def main():
+    prompt = " ".join(sys.argv[1:])
     shell = os.getenv("SHELL") or "sh"
     answer = Agent(
         model=OpenAIGPT4TurboModel(),
@@ -29,6 +23,10 @@ if __name__ == "__main__":
         temperature=0.8,
         top_p=0.8,
         presence_penalty=0.3,
-    ).prompt(f"How {prompt}")
-    print(answer)
+    ).stream(f"How {prompt}")
+    answer = print_stream(answer)
     pyperclip.copy(answer)
+
+
+if __name__ == "__main__":
+    main()
