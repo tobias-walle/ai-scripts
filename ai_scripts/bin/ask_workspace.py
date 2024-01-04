@@ -25,11 +25,11 @@ TOKEN_LIMIT_FILE_CONTENT = 10000
 def main():
     parser = argparse.ArgumentParser(
         prog="ask-workspace",
-        description="Ask your workspace a question",
+        description="Ask a question with the current folder as context",
     )
     parser.add_argument(
         "question",
-        help="The question that should be answer with the current folder as a context.",
+        help="The question that should be answered",
     )
     args = parser.parse_args()
     prompt = args.question

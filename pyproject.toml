@@ -8,12 +8,14 @@ packages = [{ include = "ai_scripts" }]
 
 [tool.poetry.scripts]
 ask-workspace = "ai_scripts.bin.ask_workspace:main"
+how = "ai_scripts.bin.how:main"
 
 [tool.poetry.dependencies]
 python = ">=3.11"
 openai = "^1.6.1"
 rich = "^13.7.0"
 tiktoken = "^0.5.2"
+pyperclip = "^1.8.2"
 
 [tool.pyright]
 venvPath = "."
