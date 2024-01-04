@@ -16,7 +16,25 @@ pip install -e .
 
 The following scripts are currently implemented:
 
+- [how](#how)
+- [explain](#explain)
 - [ask-workspace](#ask-workspace)
+
+## how
+
+```sh
+how <prompt>
+```
+
+Based on the prompt generates a cli command and copies it to the clipboard.
+
+## explain
+
+```sh
+explain <cli-command>
+```
+
+Explains a cli command and it's options.
 
 ## ask-workspace
 
