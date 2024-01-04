@@ -7,7 +7,6 @@ from openai.types.chat import (
 )
 from openai import OpenAI
 import os
-import sys
 import subprocess
 import re
 from rich.markdown import Markdown
@@ -16,6 +15,7 @@ import json
 from pathlib import Path
 import tiktoken
 from tiktoken.core import Encoding
+import argparse
 
 from ai_scripts.agent import Agent
 from ai_scripts.model import TogetherAIMistral8x7BModel
@@ -28,7 +28,16 @@ TOKEN_LIMIT_FILE_CONTENT = 10000
 
 
 def main():
-    prompt = sys.argv[1]
+    parser = argparse.ArgumentParser(
+        prog="ask-workspace",
+        description="Ask your workspace a question",
+    )
+    parser.add_argument(
+        "question",
+        help="The question that should be answer with the current folder as a context.",
+    )
+    args = parser.parse_args()
+    prompt = args.question
     content = Content(prompt=prompt)
 
     keyword_agent = Agent(
