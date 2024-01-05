@@ -37,14 +37,9 @@ def main():
         "question",
         help="The question that should be answered",
     )
-    parser.add_argument(
-        "-m",
-        "--model",
-        help="Override the model",
-    )
     args = parser.parse_args()
     prompt = args.question
-    model = Models.get_by_name(args.model, Models.MIXTRAL_8_7B.value)
+    model = Models.get_from_env_or_default(Models.MIXTRAL_8_7B.value)
     content = Content(prompt=prompt)
 
     keyword_agent = Agent(

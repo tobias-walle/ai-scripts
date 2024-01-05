@@ -108,9 +108,8 @@ class Models(Enum):
     )
 
     @classmethod
-    def get_by_name(
-        cls, name: Optional[str], default_model: Optional[Model] = None
-    ) -> Model:
+    def get_from_env_or_default(cls, default_model: Optional[Model] = None) -> Model:
+        name = os.getenv("MODEL", None)
         if name is None or name == "":
             return default_model or cls.GPT_4_TURBO.value
         lname = name.lower()

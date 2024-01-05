@@ -25,7 +25,7 @@ def print_error(msg: str):
 
 
 def render_syntax(text: str, language: str) -> Syntax:
-    return Syntax(text, language, theme=CODE_THEME)
+    return Syntax(text, language, theme=CODE_THEME, background_color="default")
 
 
 def render_markdown(text: str) -> Markdown:
@@ -44,8 +44,8 @@ def print_stream(
             # First render the output on every update
             live.update(render(limit_lines(buffer, live.console.height)))
         live.update("")
-    # Then render buffer normally, so text wrapping works like you would expect
-    print(render(buffer))
+        # Then render buffer normally, so text wrapping works like you would expect
+        live.console.print(render(buffer))
     return buffer
 
 

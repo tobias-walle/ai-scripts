@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import sys
 
 from ai_scripts.lib.logging import print_stream, render_markdown
@@ -10,7 +9,7 @@ from ai_scripts.lib.model import Models
 def main():
     prompt = " ".join(sys.argv[1:])
     answer = Agent(
-        model=Models.get_by_name(os.getenv("MODEL", None)),
+        model=Models.get_from_env_or_default(),
         system_prompt=(
             "You are an AI working as a shell expert. "
             "You are prompted with a shell command and "

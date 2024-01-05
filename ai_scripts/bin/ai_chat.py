@@ -29,12 +29,11 @@ def main():
         "file",
         help="The file to chat in",
     )
-    parser.add_argument("-m", "--model", help="Override the model")
     args = parser.parse_args()
     file = Path(args.file)
 
     console = Console()
-    model = Models.get_by_name(args.model)
+    model = Models.get_from_env_or_default()
     editor = os.getenv("EDITOR", "vi")
 
     if not file.exists():

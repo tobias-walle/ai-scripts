@@ -20,16 +20,11 @@ def main():
         "prompt",
         help="The prompt that describes what should be implemented",
     )
-    parser.add_argument(
-        "-m",
-        "--model",
-        help="Override the model",
-    )
     args = parser.parse_args()
     language = args.language
     prompt = args.prompt
     answer = Agent(
-        model=Models.get_by_name(args.model),
+        model=Models.get_from_env_or_default(),
         system_prompt=(
             "You are an AI working as a coding expert."
             "You are prompted with a desription and a language and you are ONLY responding with the code that implements that task.\n"

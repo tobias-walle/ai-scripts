@@ -14,6 +14,13 @@ Make the commands globally available via:
 pip install -e .
 ```
 
+Depending on what models are used you need to provide the following environment variables:
+
+- `OPENAI_API_KEY` for <https://openai.com/>
+- `TOGETHER_API_KEY` for <https://api.together.xyz>
+
+You can override the used model using the `MODEL` environment variable (e.g. `gpt-4-1106-preview`, `mistralai/Mistral-7B-Instruct-v0.2`).
+
 The following scripts are currently implemented:
 
 - [how](#how)
