@@ -10,6 +10,7 @@ packages = [{ include = "ai_scripts" }]
 ask-workspace = "ai_scripts.bin.ask_workspace:main"
 how = "ai_scripts.bin.how:main"
 explain = "ai_scripts.bin.explain:main"
+ai-chat = "ai_scripts.bin.ai_chat:main"
 
 [tool.poetry.dependencies]
 python = ">=3.11"
@@ -17,6 +18,7 @@ openai = "^1.6.1"
 rich = "^13.7.0"
 tiktoken = "^0.5.2"
 pyperclip = "^1.8.2"
+mdformat = "^0.7.17"
 
 [tool.pyright]
 venvPath = "."
