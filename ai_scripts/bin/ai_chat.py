@@ -12,7 +12,7 @@ from rich.console import Console
 import re
 import mdformat
 
-from ai_scripts.lib.logging import print, print_step
+from ai_scripts.lib.logging import COLOR_GRAY_1, print, print_step, print_stream
 from ai_scripts.lib.model import OpenAIGPT4TurboModel
 
 
@@ -43,17 +43,15 @@ def main():
         last_msg = last_item(chat)
         if last_msg is not None and last_msg["role"] == "user":
             console.clear()
-            with Live() as live:
-                md = md.strip() + f"\n\n{format_role('assistant')}\n"
-                stream = model.stream(chat)
-                for token in stream:
-                    md += token
-                    live.update(Markdown(md))
-                live.update("")
-            print(Markdown(md))
+            header = f"{format_role('assistant')}\n"
+            answer = print_stream(model.stream(chat), Markdown, prefix=header)
+            md += f"\n\n{answer}"
             md = md.strip() + f"\n\n{format_role('user')}\n\n"
             file.write_text(mdformat.text(md, options={"wrap": 80}))
-            cancel = console.input("\n\n[grey74]Continue? [Y,n]: [/]").lower() == "n"
+            cancel = (
+                console.input(f"\n\n[{COLOR_GRAY_1}]Continue? [Y,n]: [/]").lower()
+                == "n"
+            )
             if cancel:
                 break
         else:
