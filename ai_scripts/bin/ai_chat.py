@@ -6,18 +6,21 @@ import sys
 import subprocess
 from typing import Dict, List, Optional, TypeVar
 from openai.types.chat import ChatCompletionMessageParam
-from rich.live import Live
-from rich.markdown import Markdown
 from rich.console import Console
 import re
 import mdformat
 
-from ai_scripts.lib.logging import COLOR_GRAY_1, print, print_step, print_stream
+from ai_scripts.lib.logging import (
+    COLOR_GRAY_1,
+    print,
+    print_step,
+    print_stream,
+    render_markdown,
+)
 from ai_scripts.lib.model import OpenAIGPT4TurboModel
 
 
 def main():
-    console = Console()
     parser = argparse.ArgumentParser(
         prog="ai-chat",
         description="Chat with the ai in an markdown file",
@@ -29,6 +32,7 @@ def main():
     args = parser.parse_args()
     file = Path(args.file)
 
+    console = Console()
     model = OpenAIGPT4TurboModel()
     editor = os.getenv("EDITOR", "vi")
 
@@ -44,7 +48,7 @@ def main():
         if last_msg is not None and last_msg["role"] == "user":
             console.clear()
             header = f"{format_role('assistant')}\n"
-            answer = print_stream(model.stream(chat), Markdown, prefix=header)
+            answer = print_stream(model.stream(chat), render_markdown, prefix=header)
             md += f"\n\n{answer}"
             md = md.strip() + f"\n\n{format_role('user')}\n\n"
             file.write_text(mdformat.text(md, options={"wrap": 80}))

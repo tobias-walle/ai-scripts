@@ -18,7 +18,9 @@ The following scripts are currently implemented:
 
 - [how](#how)
 - [explain](#explain)
+- [implement](#implement)
 - [ask-workspace](#ask-workspace)
+- [ai-chat](#ai-chat)
 
 ## how
 
@@ -35,6 +37,14 @@ explain <cli-command>
 ```
 
 Explains a cli command and it's options.
+
+## implement
+
+```sh
+implement <language> <description>
+```
+
+Implement a functionality in the given language based on the description.
 
 ## ask-workspace
 

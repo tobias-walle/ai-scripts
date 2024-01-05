@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import sys
-from rich.markdown import Markdown
 
-from ai_scripts.lib.logging import print_stream
+from ai_scripts.lib.logging import print_stream, render_markdown
 from ai_scripts.lib.agent import Agent
 from ai_scripts.lib.model import OpenAIGPT4TurboModel
 
@@ -43,7 +42,7 @@ def main():
         top_p=0.3,
         presence_penalty=0.3,
     ).stream(f"How {prompt}")
-    print_stream(answer, Markdown)
+    print_stream(answer, render_markdown)
 
 
 if __name__ == "__main__":

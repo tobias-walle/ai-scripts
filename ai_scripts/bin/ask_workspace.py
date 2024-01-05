@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import List
 import os
 import re
-from rich.markdown import Markdown
 import json
 from pathlib import Path
 import argparse
@@ -14,6 +13,7 @@ from ai_scripts.lib.logging import (
     print_error,
     print_status,
     print_stream,
+    render_markdown,
 )
 from ai_scripts.lib.agent import Agent
 from ai_scripts.lib.model import TogetherAIMistral8x7BModel
@@ -119,7 +119,7 @@ def main():
         file_paths = json.loads(answer)
     except Exception:
         print_status("No valid JSON list of files provided")
-        print(Markdown(answer))
+        print(render_markdown(answer))
         return
     print_step(f"Look into files: [bright_cyan]{' '.join(file_paths)}[/bright_cyan]")
     files = []
@@ -145,7 +145,7 @@ def main():
     print_step("Get final answer")
     answer = final_answer_agent.stream(str(content))
     print()
-    print_stream(answer, Markdown)
+    print_stream(answer, render_markdown)
 
 
 @dataclass

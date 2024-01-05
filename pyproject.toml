@@ -11,6 +11,7 @@ ask-workspace = "ai_scripts.bin.ask_workspace:main"
 how = "ai_scripts.bin.how:main"
 explain = "ai_scripts.bin.explain:main"
 ai-chat = "ai_scripts.bin.ai_chat:main"
+implement = "ai_scripts.bin.implement:main"
 
 [tool.poetry.dependencies]
 python = ">=3.11"
