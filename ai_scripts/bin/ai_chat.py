@@ -17,7 +17,7 @@ from ai_scripts.lib.logging import (
     print_stream,
     render_markdown,
 )
-from ai_scripts.lib.model import OpenAIGPT4TurboModel
+from ai_scripts.lib.model import Models
 
 
 def main():
@@ -29,11 +29,12 @@ def main():
         "file",
         help="The file to chat in",
     )
+    parser.add_argument("-m", "--model", help="Override the model")
     args = parser.parse_args()
     file = Path(args.file)
 
     console = Console()
-    model = OpenAIGPT4TurboModel()
+    model = Models.get_by_name(args.model)
     editor = os.getenv("EDITOR", "vi")
 
     if not file.exists():

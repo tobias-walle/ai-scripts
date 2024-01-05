@@ -1,18 +1,33 @@
 #!/usr/bin/env python3
+import argparse
 import os
-import sys
 import pyperclip
 
 from ai_scripts.lib.logging import print_stream
 from ai_scripts.lib.agent import Agent
-from ai_scripts.lib.model import OpenAIGPT4TurboModel
+from ai_scripts.lib.model import Models
 
 
 def main():
-    prompt = " ".join(sys.argv[1:])
+    parser = argparse.ArgumentParser(
+        prog="how",
+        description="Given a task, returns a shell script that executes the task. "
+        "Shell in use is extracted from the SHELL env variable.",
+    )
+    parser.add_argument(
+        "task",
+        help="The task that should be executed by the shell script",
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        help="Override the model",
+    )
+    args = parser.parse_args()
+    prompt = args.task
     shell = os.getenv("SHELL") or "sh"
     answer = Agent(
-        model=OpenAIGPT4TurboModel(),
+        model=Models.get_by_name(args.model),
         system_prompt=(
             "You are an AI working as a shell. You are prompted with a task and "
             "you are ONLY responding with a shell command to execute that task "

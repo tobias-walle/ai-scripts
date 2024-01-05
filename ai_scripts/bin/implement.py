@@ -4,7 +4,7 @@ import pyperclip
 
 from ai_scripts.lib.logging import print_stream, render_syntax
 from ai_scripts.lib.agent import Agent
-from ai_scripts.lib.model import OpenAIGPT4TurboModel
+from ai_scripts.lib.model import Models
 
 
 def main():
@@ -20,11 +20,16 @@ def main():
         "prompt",
         help="The prompt that describes what should be implemented",
     )
+    parser.add_argument(
+        "-m",
+        "--model",
+        help="Override the model",
+    )
     args = parser.parse_args()
     language = args.language
     prompt = args.prompt
     answer = Agent(
-        model=OpenAIGPT4TurboModel(),
+        model=Models.get_by_name(args.model),
         system_prompt=(
             "You are an AI working as a coding expert."
             "You are prompted with a desription and a language and you are ONLY responding with the code that implements that task.\n"

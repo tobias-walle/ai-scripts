@@ -1,8 +1,10 @@
+from enum import Enum
 import os
 from typing import (
     Iterable,
     List,
     NotRequired,
+    Optional,
     Protocol,
     TypedDict,
     Unpack,
@@ -10,6 +12,8 @@ from typing import (
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
+
+from ai_scripts.lib.logging import print_step
 
 
 class ChatOptions(TypedDict):
@@ -20,6 +24,9 @@ class ChatOptions(TypedDict):
 
 
 class Model(Protocol):
+    name: str
+    abbr: Optional[str]
+
     def complete(
         self,
         messages: List[ChatCompletionMessageParam],
@@ -35,10 +42,15 @@ class Model(Protocol):
         ...
 
 
-class _OpenAICompatibleModel(Model, Protocol):
+class OpenAICompatibleModel(Model):
+    def __init__(self, name: str, abbr: Optional[str], client: OpenAI) -> None:
+        self.client = client
+        self.name = name
+        self.abbr = abbr
+
     def complete(self, messages, **kwargs):
-        answer = self._client().chat.completions.create(
-            model=self._model(),
+        answer = self.client.chat.completions.create(
+            model=self.name,
             messages=messages,
             stream=False,
             **self._options(kwargs),
@@ -46,8 +58,8 @@ class _OpenAICompatibleModel(Model, Protocol):
         return answer.choices[0].message.content or ""
 
     def stream(self, messages, **kwargs):
-        stream = self._client().chat.completions.create(
-            model=self._model(),
+        stream = self.client.chat.completions.create(
+            model=self.name,
             messages=messages,
             stream=True,
             **self._options(kwargs),
@@ -60,10 +72,10 @@ class _OpenAICompatibleModel(Model, Protocol):
 
     def _options(self, options) -> ChatOptions:
         return {
-            "max_tokens": options.pop("max_tokens", 1024),
-            "temperature": options.pop("temperature", 1),
-            "top_p": options.pop("top_p", 1),
-            "presence_penalty": options.pop("presence_penalty", 1),
+            "max_tokens": options.pop("max_tokens", None),
+            "temperature": options.pop("temperature", None),
+            "top_p": options.pop("top_p", None),
+            "presence_penalty": options.pop("presence_penalty", None),
         }
 
     def _model(self) -> str:
@@ -71,30 +83,6 @@ class _OpenAICompatibleModel(Model, Protocol):
 
     def _client(self) -> OpenAI:
         ...
-
-
-class TogetherAIMixtral8x7BModel(_OpenAICompatibleModel):
-    def _model(self):
-        return "mistralai/Mixtral-8x7B-Instruct-v0.1"
-
-    def _client(self):
-        return _together_client()
-
-
-class TogetherAIMistral7BModel(_OpenAICompatibleModel):
-    def _model(self):
-        return "mistralai/Mixtral-8x7B-Instruct-v0.1"
-
-    def _client(self):
-        return _together_client()
-
-
-class OpenAIGPT4TurboModel(_OpenAICompatibleModel):
-    def _model(self):
-        return "gpt-4-1106-preview"
-
-    def _client(self):
-        return _openai_client()
 
 
 def _together_client() -> OpenAI:
@@ -108,3 +96,31 @@ def _openai_client() -> OpenAI:
     return OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
     )
+
+
+class Models(Enum):
+    GPT_4_TURBO = OpenAICompatibleModel("gpt-4-1106-preview", "G4", _openai_client())
+    MIXTRAL_8_7B = OpenAICompatibleModel(
+        "mistralai/Mixtral-8x7B-Instruct-v0.1", "MX8", _together_client()
+    )
+    MISTRAL_7B = OpenAICompatibleModel(
+        "mistralai/Mistral-7B-Instruct-v0.2", "MS7", _together_client()
+    )
+
+    @classmethod
+    def get_by_name(
+        cls, name: Optional[str], default_model: Optional[Model] = None
+    ) -> Model:
+        if name is None or name == "":
+            return default_model or cls.GPT_4_TURBO.value
+        lname = name.lower()
+        for enum in cls:
+            m = enum.value
+            if m.name.lower() == lname or (
+                m.abbr is not None and m.abbr.lower() == lname
+            ):
+                return m
+        print_step(
+            f'Couldn\'t find model "{name}". Try to access it anyway on TogetherAI.'
+        )
+        return OpenAICompatibleModel(name, None, _together_client())

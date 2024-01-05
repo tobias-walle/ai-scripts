@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
+import os
 import sys
 
 from ai_scripts.lib.logging import print_stream, render_markdown
 from ai_scripts.lib.agent import Agent
-from ai_scripts.lib.model import OpenAIGPT4TurboModel
+from ai_scripts.lib.model import Models
 
 
 def main():
     prompt = " ".join(sys.argv[1:])
     answer = Agent(
-        model=OpenAIGPT4TurboModel(),
+        model=Models.get_by_name(os.getenv("MODEL", None)),
         system_prompt=(
             "You are an AI working as a shell expert. "
             "You are prompted with a shell command and "
