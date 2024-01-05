@@ -73,7 +73,15 @@ class _OpenAICompatibleModel(Model, Protocol):
         ...
 
 
-class TogetherAIMistral8x7BModel(_OpenAICompatibleModel):
+class TogetherAIMixtral8x7BModel(_OpenAICompatibleModel):
+    def _model(self):
+        return "mistralai/Mixtral-8x7B-Instruct-v0.1"
+
+    def _client(self):
+        return _together_client()
+
+
+class TogetherAIMistral7BModel(_OpenAICompatibleModel):
     def _model(self):
         return "mistralai/Mixtral-8x7B-Instruct-v0.1"
 

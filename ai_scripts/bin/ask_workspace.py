@@ -16,7 +16,7 @@ from ai_scripts.lib.logging import (
     render_markdown,
 )
 from ai_scripts.lib.agent import Agent
-from ai_scripts.lib.model import TogetherAIMistral8x7BModel
+from ai_scripts.lib.model import TogetherAIMixtral8x7BModel
 from ai_scripts.lib.fs import grep_keyword
 from ai_scripts.lib.sh import run_cmd
 from ai_scripts.lib.tokenizing import limit_tokens, number_of_tokens
@@ -42,7 +42,7 @@ def main():
     content = Content(prompt=prompt)
 
     keyword_agent = Agent(
-        model=TogetherAIMistral8x7BModel(),
+        model=TogetherAIMixtral8x7BModel(),
         system_prompt=(
             "You are an expert programmer and code search expert.\n"
             "You are given a prompt and are answering with a LIST OF SINGLE WORD, LOWERCASE SEARCH TERMS for finding related content via grep.\n"
@@ -56,7 +56,7 @@ def main():
         presence_penalty=1.5,
     )
     file_paths_agent = Agent(
-        model=TogetherAIMistral8x7BModel(),
+        model=TogetherAIMixtral8x7BModel(),
         system_prompt=(
             "You are an expert programmer.\n"
             "You are given a prompt and some context and are answering ONLY with a LIST OF FILE PATHS AS A JSON ARRAY with content that might be relevant to answer the question.\n"
@@ -71,7 +71,7 @@ def main():
         presence_penalty=1.5,
     )
     final_answer_agent = Agent(
-        model=TogetherAIMistral8x7BModel(),
+        model=TogetherAIMixtral8x7BModel(),
         system_prompt=(
             "You are an expert programmer.\n"
             "You are given a prompt and some context and are answering the question in the prompt based on the given informations.\n"

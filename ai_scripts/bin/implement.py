@@ -36,6 +36,7 @@ def main():
             " - AVOID COMMENTARY OUTSIDE OF THE SNIPPET\n"
             " - OMIT THE ``` WRAPPER IN YOUR RESPONSE\n"
             "\n"
+            "\n"
             "EXAMPLE 1:\n"
             "language: python\n"
             "prompt:\n"
@@ -44,6 +45,7 @@ def main():
             "REPONSE:\n"
             "def run_cmd(cmd: List[str]) -> str:\n"
             '   return subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")'
+            "\n"
             "\n"
             "EXAMPLE 2:\n"
             "language: lua\n"
