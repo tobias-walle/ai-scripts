@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import subprocess
 from enum import Enum
 from pathlib import Path
-import subprocess
+
 import pyperclip
 
-from ai_scripts.lib.logging import print_error, print_stream, render_syntax
 from ai_scripts.lib.agent import Agent
+from ai_scripts.lib.logging import print_error, print_stream, render_syntax
 from ai_scripts.lib.model import Models
 
 

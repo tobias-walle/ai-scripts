@@ -27,6 +27,7 @@ The following scripts are currently implemented:
 - [explain](#explain)
 - [implement](#implement)
 - [rewrite](#rewrite)
+- [find-docs](#find-docs)
 - [ask-workspace](#ask-workspace)
 - [ai-chat](#ai-chat)
 
@@ -68,6 +69,16 @@ The `code` argument is optional and a clipboard is used as a default.
 - `-f, --file` get the code from a file
 - `-o, --format <code|diff>` specifies how the code is formatted.
   If `-f -o diff` is set you are prompted to patch the file directly with the proposed changes.
+
+## find-docs
+
+```sh
+find-docs <prompt>
+```
+
+Find documentation based on the given prompt.
+
+- `-s, --summary`: Summarizes the docs for you (optional).
 
 ## ask-workspace
 
