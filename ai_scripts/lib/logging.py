@@ -44,6 +44,7 @@ def print_stream(
             # First render the output on every update
             live.update(render(limit_lines(buffer, live.console.height)))
         live.update("")
+        buffer = buffer.strip()
         # Then render buffer normally, so text wrapping works like you would expect
         live.console.print(render(buffer))
     return buffer

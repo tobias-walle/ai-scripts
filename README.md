@@ -26,6 +26,7 @@ The following scripts are currently implemented:
 - [how](#how)
 - [explain](#explain)
 - [implement](#implement)
+- [rewrite](#rewrite)
 - [ask-workspace](#ask-workspace)
 - [ai-chat](#ai-chat)
 
@@ -52,6 +53,21 @@ implement <language> <description>
 ```
 
 Implement a functionality in the given language based on the description.
+
+## rewrite
+
+```sh
+rewrite <language> <description> <code?>
+```
+
+Rewrite the given code based on the description.
+
+The `code` argument is optional and a clipboard is used as a default.
+
+- `-h, --help` to see all options
+- `-f, --file` get the code from a file
+- `-o, --format <code|diff>` specifies how the code is formatted.
+  If `-f -o diff` is set you are prompted to patch the file directly with the proposed changes.
 
 ## ask-workspace
 
