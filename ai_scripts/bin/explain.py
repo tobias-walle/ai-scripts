@@ -38,9 +38,7 @@ def main():
             "\n"
             "`ls -al` will display all files and directories, including hidden ones, with detailed information in a long listing format.\n"
         ),
-        temperature=0.5,
         top_p=0.3,
-        presence_penalty=0.3,
     ).stream(f"How {prompt}")
     print_stream(answer, render_markdown)
 

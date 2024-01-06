@@ -75,9 +75,6 @@ def main():
                 "The function was introduced in Python 3.5, with the `encoding` and `errors` parameters added in 3.6, `text` and `capture_output` in 3.7, and the behavior for `shell=True` on Windows changed in version 3.12.\n"
             )
         ),
-        temperature=1,
-        top_p=1,
-        presence_penalty=1,
     ).stream(prompt.strip())
     answer = print_stream(answer, render_markdown)
 

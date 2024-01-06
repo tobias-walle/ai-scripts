@@ -83,9 +83,7 @@ def main():
             "  return win_id\n"
             "end\n"
         ),
-        temperature=0.8,
         top_p=0.1,
-        presence_penalty=1,
     ).stream(f"language: {language}\n" f"prompt:\n{prompt}\n")
     answer = print_stream(answer, lambda s: render_syntax(s, language))
     pyperclip.copy(answer)

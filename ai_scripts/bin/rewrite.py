@@ -104,9 +104,7 @@ def main():
             "\n"
             "RESPONSE:\n" + response_example
         ),
-        temperature=0.8,
         top_p=0.1,
-        presence_penalty=1,
     ).stream(f"language: {language}\nprompt:\n{prompt}\ncode:\n{code}\n")
     answer = print_stream(answer, lambda s: render_syntax(s, language))
     if file != "" and format == Format.DIFF:

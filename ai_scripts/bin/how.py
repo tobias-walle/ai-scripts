@@ -30,9 +30,7 @@ def main():
             "\n\nPlease AVOID COMMENTARY OUTSIDE OF THE SNIPPET RESPONSE.\n\n"
             "DO OMIT THE ``` WRAPPER IN YOUR RESPONSE AND ONLY OUTPUT THE COMMAND."
         ),
-        temperature=0.8,
         top_p=0.8,
-        presence_penalty=0.3,
     ).stream(f"How {prompt}")
     answer = print_stream(answer, lambda s: render_syntax(s, "shell"))
     pyperclip.copy(answer)

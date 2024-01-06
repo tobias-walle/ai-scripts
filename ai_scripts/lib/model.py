@@ -49,34 +49,25 @@ class OpenAICompatibleModel(Model):
         self.abbr = abbr
 
     def complete(self, messages, **kwargs):
+        print_step(f"Using {self.name}")
         answer = self.client.chat.completions.create(
-            model=self.name,
-            messages=messages,
-            stream=False,
-            **self._options(kwargs),
+            model=self.name, messages=messages, stream=False, **kwargs
         )
         return answer.choices[0].message.content or ""
 
     def stream(self, messages, **kwargs):
+        print_step(f"Using {self.name} (stream)")
         stream = self.client.chat.completions.create(
             model=self.name,
             messages=messages,
             stream=True,
-            **self._options(kwargs),
+            **kwargs,
         )
         return (
             chunk.choices[0].delta.content
             for chunk in stream
             if chunk.choices[0].delta.content is not None
         )
-
-    def _options(self, options) -> ChatOptions:
-        return {
-            "max_tokens": options.pop("max_tokens", None),
-            "temperature": options.pop("temperature", None),
-            "top_p": options.pop("top_p", None),
-            "presence_penalty": options.pop("presence_penalty", None),
-        }
 
     def _model(self) -> str:
         ...
@@ -85,9 +76,16 @@ class OpenAICompatibleModel(Model):
         ...
 
 
+def _mistral_client() -> OpenAI:
+    return OpenAI(
+        api_key=os.getenv("MISTRAL_API_KEY"),
+        base_url="https://api.mistral.ai/v1",
+    )
+
+
 def _together_client() -> OpenAI:
     return OpenAI(
-        api_key=os.getenv("TOGETHER_API_TOKEN"),
+        api_key=os.getenv("TOGETHER_API_KEY"),
         base_url="https://api.together.xyz/v1",
     )
 
@@ -106,6 +104,9 @@ class Models(Enum):
     MISTRAL_7B = OpenAICompatibleModel(
         "mistralai/Mistral-7B-Instruct-v0.2", "MS7", _together_client()
     )
+    MISTRAL_TINY = OpenAICompatibleModel("mistral-tiny", "MST", _mistral_client())
+    MISTRAL_SMALL = OpenAICompatibleModel("mistral-small", "MSS", _mistral_client())
+    MISTRAL_MEDIUM = OpenAICompatibleModel("mistral-medium", "MSM", _mistral_client())
 
     @classmethod
     def get_from_env_or_default(cls, default_model: Optional[Model] = None) -> Model:

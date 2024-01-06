@@ -1,3 +1,4 @@
+import sys
 from typing import Callable, Iterable
 from rich import print
 from rich.console import RenderableType
@@ -13,15 +14,15 @@ CODE_THEME = "dracula"
 
 
 def print_step(msg: str):
-    print(f"[{COLOR_GRAY_1}]> {msg}[/]")
+    print(f"[{COLOR_GRAY_1}]> {msg}[/]", file=sys.stderr)
 
 
 def print_status(msg: str):
-    print(f"[{COLOR_GRAY_2}]- {msg}[/]")
+    print(f"[{COLOR_GRAY_2}]- {msg}[/]", file=sys.stderr)
 
 
 def print_error(msg: str):
-    print(f"[{COLOR_RED}]- ERROR: {msg}[/]")
+    print(f"[{COLOR_RED}]- ERROR: {msg}[/]", file=sys.stderr)
 
 
 def render_syntax(text: str, language: str) -> Syntax:

@@ -52,9 +52,7 @@ def main():
             "Answer with at LEAST 5 AND NOT MORE THAN 10 search terms seperated by space.\n"
             "DO NOT INCLUDE ANY OTHER TEXT, NOTES OR EXPLAINATIONS IN YOUR ANSWER!\n"
         ),
-        temperature=1.3,
         top_p=0.1,
-        presence_penalty=1.5,
     )
     file_paths_agent = Agent(
         model=model,
@@ -67,9 +65,7 @@ def main():
             "SORT THE FILES BY RELEVANCE. START WITH THE MOST RELEVANT FILE AND END WITH THE LEAST RELEVANT.\n"
             "ONLY ANSWER WITH THE JSON ARRAY OF FILES, DO NOT ANSWER THE PROMPT DIRECTLY!"
         ),
-        temperature=1,
         top_p=0.1,
-        presence_penalty=1.5,
     )
     final_answer_agent = Agent(
         model=model,
@@ -80,9 +76,7 @@ def main():
             "EXPLAIN THE SOURCE FOR YOUR ANSWER.\n"
             "BE CLEAR ABOUT THAT INFORMATION YOU HAVE AND WHAT INFORMATION YOU INTERPRETED BASED ON THE CONTEXT."
         ),
-        temperature=0.8,
         top_p=0.8,
-        presence_penalty=0.8,
     )
 
     print_step("Add file paths to context")
@@ -118,8 +112,8 @@ def main():
     answer = file_paths_agent.complete(str(content))
     try:
         file_paths = json.loads(answer)
-    except Exception:
-        print_status("No valid JSON list of files provided")
+    except Exception as e:
+        print_status(f"No valid JSON list of files provided: {e}")
         print(render_markdown(answer))
         return
     print_step(f"Look into files: [bright_cyan]{' '.join(file_paths)}[/bright_cyan]")
