@@ -50,7 +50,7 @@ def main():
             "REPONSE:\n"
             "```python\n"
             "def run_cmd(cmd: List[str]) -> str:\n"
-            '   """Runs the given command and returns stdout"""'
+            '   """Runs the given command and returns stdout"""\n'
             '   return subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")\n'
             "```\n"
             "\n"
