@@ -9,6 +9,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from rich.console import Console
 import re
 import mdformat
+import tempfile
 
 from ai_scripts.lib.logging import (
     COLOR_GRAY_1,
@@ -28,18 +29,44 @@ def main():
     parser.add_argument(
         "file",
         help="The file to chat in",
+        nargs="?",
+    )
+    parser.add_argument(
+        "-p",
+        "--prompt",
+        help="Pass a prompt that will be answered directly",
+    )
+    parser.add_argument(
+        "-s",
+        "--system",
+        help="Pass a sytem prompt directly (Only works if the file is empty or doesn't exists yet)",
     )
     args = parser.parse_args()
-    file = Path(args.file)
+    user_prompt: str = args.prompt or ""
+    system_prompt: str = args.system or ""
+    file_path: str = args.file or ""
+
+    if file_path == "":
+        file_path = tempfile.NamedTemporaryFile(
+            prefix="chat_", suffix=".md", delete=False
+        ).name
+        print_step(f"Created temporay file {file_path}")
+    file = Path(file_path)
 
     console = Console()
     model = Models.get_from_env_or_default()
     editor = os.getenv("EDITOR", "vi")
 
-    if not file.exists():
-        file.write_text(
-            f"{format_role('system')}\nYou are a helpful assistant.\n\n{format_role('user')}\n"
-        )
+    if not file.exists() or file.read_text().strip() == "":
+        md = ""
+        md = add_message(md, "system", system_prompt)
+        md = add_message(md, "user", user_prompt)
+        print(md)
+        file.write_text(md)
+    elif user_prompt != "":
+        md = file.read_text()
+        md = add_message(md, "user", user_prompt)
+        file.write_text(md)
 
     while True:
         md = file.read_text()
@@ -47,10 +74,9 @@ def main():
         last_msg = last_item(chat)
         if last_msg is not None and last_msg["role"] == "user":
             console.clear()
-            header = f"{format_role('assistant')}\n"
-            answer = print_stream(model.stream(chat), render_markdown, prefix=header)
-            md += f"\n\n{answer}"
-            md = md.strip() + f"\n\n{format_role('user')}\n\n"
+            answer = print_stream(model.stream(chat), render_markdown)
+            md = add_message(md, "assistant", answer)
+            md = add_message(md, "user", "")
             file.write_text(mdformat.text(md, options={"wrap": 80}))
             cancel = (
                 console.input(f"\n\n[{COLOR_GRAY_1}]Continue? [Y,n]: [/]").lower()
@@ -89,6 +115,15 @@ def parse_chat(md: str) -> List[ChatCompletionMessageParam]:
 
     messages = [m for m in messages if m["content"] != ""]
     return messages  # type: ignore
+
+
+def add_message(md: str, role: str, message: str) -> str:
+    role_with_message = f"{format_role(role)}\n{message}"
+    md = md.strip()
+    if md != "":
+        role_with_message = f"\n\n{role_with_message}"
+    md += role_with_message
+    return md
 
 
 def format_role(role: str) -> str:
