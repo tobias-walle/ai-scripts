@@ -13,7 +13,7 @@ from typing import (
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
-from ai_scripts.lib.logging import print_step
+from ai_scripts.lib.logging import print_status, print_step
 
 
 class ChatOptions(TypedDict):
@@ -49,14 +49,14 @@ class OpenAICompatibleModel(Model):
         self.abbr = abbr
 
     def complete(self, messages, **kwargs):
-        print_step(f"Using {self.name}")
+        print_status(f"Using {self.name}")
         answer = self.client.chat.completions.create(
             model=self.name, messages=messages, stream=False, **kwargs
         )
         return answer.choices[0].message.content or ""
 
     def stream(self, messages, **kwargs):
-        print_step(f"Using {self.name} (stream)")
+        print_status(f"Using {self.name} (stream)")
         stream = self.client.chat.completions.create(
             model=self.name,
             messages=messages,
