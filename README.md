@@ -2,6 +2,9 @@
 
 Some cli scripts to interact with chatbots and other ai tools.
 
+> NOTE: I am using the project personally to experiment with AI, so it is very experimental.
+> Please use it on your own risk. I will probably add breaking changes to the commands regularly.
+
 You can install the project via:
 
 ```sh
@@ -111,14 +114,19 @@ The syntax of the chat is the following:
 Example:
 
 ```md
-[system]:
+# --- system ---
+
 You are a helpful assistant.
 
-[user]:
+# --- user ---
+
 What is the time?
 
-[assistant]:
-As an artificial intelligence, I don't have feelings or consciousness, so I don't experience states of being in the way humans do.
-However I'm here and ready to help you.
-How can I assist you today?
+# --- assistant ---
+
+I'm sorry, but I am unable to provide real-time information or current time as
+my capabilities are limited to text-based interactions and I don't have access
+to real-time data. However, you can easily check the current time by looking at
+the clock on your device or by searching for the current time in your location
+on a search engine.
 ```

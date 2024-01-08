@@ -27,11 +27,11 @@ def print_error(msg: str):
     print(f"[{COLOR_RED}]- ERROR: {msg}[/]", file=sys.stderr)
 
 
-def render_syntax(text: str, language: str) -> Syntax:
+def render_syntax(text: str, language: str) -> RenderableType:
     return Syntax(text, language, theme=CODE_THEME, background_color="default")
 
 
-def render_markdown(text: str) -> Markdown:
+def render_markdown(text: str) -> RenderableType:
     return Markdown(text, code_theme=CODE_THEME, inline_code_theme=CODE_THEME)
 
 
