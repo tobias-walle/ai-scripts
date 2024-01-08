@@ -109,11 +109,16 @@ This will open your `$EDITOR`. Every time you save the file, an answer will be g
 The syntax of the chat is the following:
 
 - `[<role>]:` Marks the start of a new message
-- You can options like `temperature` in the front matter. (TODO)
+- You can set options like `model`, `temperature`, `top_p` and `presence_penalty` in the front matter.
 
 Example:
 
 ```md
+---
+model: gpt-4-1106-preview
+temperature: 1.3
+---
+
 # --- system ---
 
 You are a helpful assistant.

@@ -4,12 +4,13 @@ import os
 from pathlib import Path
 import sys
 import subprocess
-from typing import Dict, List, Optional, TypeVar
+from typing import Dict, List, NotRequired, Optional, TypeVar, TypedDict
 from openai.types.chat import ChatCompletionMessageParam
 from rich.console import Console
 import re
-import mdformat
 import tempfile
+import yaml
+from ai_scripts.lib.dict import remove_none_values
 
 from ai_scripts.lib.logging import (
     COLOR_GRAY_1,
@@ -19,6 +20,7 @@ from ai_scripts.lib.logging import (
     render_markdown,
 )
 from ai_scripts.lib.model import Models
+from ai_scripts.lib.string import format_markdown
 
 
 def main():
@@ -54,14 +56,13 @@ def main():
     file = Path(file_path)
 
     console = Console()
-    model = Models.get_from_env_or_default()
     editor = os.getenv("EDITOR", "vi")
 
     if not file.exists() or file.read_text().strip() == "":
-        md = ""
-        md = add_message(md, "system", system_prompt)
+        md = f"---\nmodel: {Models.GPT_4_TURBO.value.name}\n---"
+        if system_prompt != "":
+            md = add_message(md, "system", system_prompt)
         md = add_message(md, "user", user_prompt)
-        print(md)
         file.write_text(md)
     elif user_prompt != "":
         md = file.read_text()
@@ -71,16 +72,23 @@ def main():
     while True:
         md = file.read_text()
         chat = parse_chat(md)
+        metadata = parse_metadata(md)
+        model_name = metadata.get("model")
+        model = (
+            Models.get_by_name(model_name)
+            if model_name
+            else Models.get_from_env_or_default()
+        )
         last_msg = last_item(chat)
         if last_msg is not None and last_msg["role"] == "user":
             console.clear()
-            answer = print_stream(model.stream(chat), render_markdown)
+            model_options = remove_none_values({**metadata, "model": None})
+            answer = print_stream(model.stream(chat, **model_options), render_markdown)
             md = add_message(md, "assistant", answer)
             md = add_message(md, "user", "")
-            file.write_text(mdformat.text(md, options={"wrap": 80}))
+            file.write_text(format_markdown(md))
             cancel = (
-                console.input(f"\n\n[{COLOR_GRAY_1}]Continue? [Y,n]: [/]").lower()
-                == "n"
+                console.input(f"[{COLOR_GRAY_1}]Continue? [Y,n]: [/]").lower() == "n"
             )
             if cancel:
                 break
@@ -95,6 +103,24 @@ def main():
             if last_msg is None or last_msg["role"] != "user":
                 print_step("Last message is not of role 'user'. Exiting...")
                 break
+
+
+class Metadata(TypedDict):
+    model: NotRequired[Optional[str]]
+    max_tokens: NotRequired[Optional[int]]
+    temperature: NotRequired[Optional[float]]
+    top_p: NotRequired[Optional[float]]
+    presence_penalty: NotRequired[Optional[float]]
+
+
+def parse_metadata(md: str) -> Metadata:
+    parts = re.split(r"^---\n", md, flags=re.RegexFlag.MULTILINE)
+    print(parts)
+    if len(parts) >= 2:
+        front_matter = yaml.safe_load(parts[1])
+        return front_matter
+    else:
+        return {}
 
 
 def parse_chat(md: str) -> List[ChatCompletionMessageParam]:

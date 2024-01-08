@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import re
 from typing import Optional
+import mdformat
 
 
 @dataclass
@@ -32,3 +33,11 @@ def extract_first_code_snippet_from_markdown(markdown: str) -> ExtractedCode:
                 language = md_start_match.group(2)
     code = "\n".join(result)
     return ExtractedCode(code=code, completed=completed, language=language)
+
+
+def format_markdown(md: str) -> str:
+    parts = re.split(r"^---\n", md, flags=re.RegexFlag.MULTILINE)
+    parts[-1] = mdformat.text(parts[-1], options={"wrap": 80})
+    if len(parts) >= 3:
+        parts[-1] = f"\n{parts[-1]}"
+    return "---\n".join(parts)

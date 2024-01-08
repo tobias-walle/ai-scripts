@@ -113,6 +113,10 @@ class Models(Enum):
         name = os.getenv("MODEL", None)
         if name is None or name == "":
             return default_model or cls.GPT_4_TURBO.value
+        return cls.get_by_name(name)
+
+    @classmethod
+    def get_by_name(cls, name: str) -> Model:
         lname = name.lower()
         for enum in cls:
             m = enum.value
