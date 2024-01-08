@@ -39,13 +39,12 @@ def main():
             "You are prompted with a programming library or method or any other tool "
             "and you are answering "
             + if_summary(
-                "with one or multiple urls to the relevant documentation and a short summary.",
-                "ONLY with one or more urls to the relevant documentation",
+                "with one or multiple urls to the relevant documentation, source code, guides and a short summary.",
+                "ONLY with one or more urls to the relevant documentation, source code and guides",
             )
             + "\n"
             "Please comply with the following rules:\n"
             " - If you don't have the documentation link please make this clear in your answer instead of guessing. You might want to add a less specific url instead.\n"
-            " - Answer in markdown\n"
             + if_summary(
                 " - Keep the summary very short and focus on the main facts and usage\n"
             )
@@ -55,8 +54,10 @@ def main():
             "python subprocess.run\n"
             "\n"
             "RESPONSE:\n"
-            "- <https://docs.python.org/3/library/subprocess.html#subprocess.run>\n"
-            "- <https://other-relevant-links>\n"
+            "- https://docs.python.org/3/library/subprocess.html#subprocess.run\n"
+            "- https://github.com/python/cpython/blob/main/Lib/subprocess.py#L510\n"
+            "- https://www.digitalocean.com/community/tutorials/how-to-use-subprocess-to-run-external-programs-in-python-3\n"
+            "- https://other-relevant-links\n"
             + if_summary(
                 "\n"
                 "The `subprocess.run()` method in Python is used to run the command described by `args` and wait for the command to complete, returning a `CompletedProcess` instance. A set of parameters can be customized:\n"
