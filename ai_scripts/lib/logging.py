@@ -6,6 +6,8 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.syntax import Syntax
 
+from ai_scripts.lib.string import extract_first_code_snippet_from_markdown
+
 COLOR_GRAY_1 = "grey74"
 COLOR_GRAY_2 = "grey54"
 COLOR_RED = "bright_red"
@@ -36,19 +38,45 @@ def render_markdown(text: str) -> Markdown:
 def print_stream(
     stream: Iterable[str],
     render: Callable[[str], RenderableType] = lambda s: s,
+    postprocess: Callable[[str], str] = lambda s: s,
+    cancel: Callable[[str], bool] = lambda _: False,
     prefix="",
 ) -> str:
     with Live() as live:
         buffer = prefix
         for token in stream:
             buffer += token
+            rendered_buffer = postprocess(buffer.lstrip())
+            rendered_buffer = limit_lines(rendered_buffer, live.console.height)
             # First render the output on every update
-            live.update(render(limit_lines(buffer, live.console.height)))
+            live.update(render(rendered_buffer))
+            if cancel(buffer):
+                break
         live.update("")
-        buffer = buffer.strip()
+        buffer = postprocess(buffer.strip())
         # Then render buffer normally, so text wrapping works like you would expect
         live.console.print(render(buffer))
     return buffer
+
+
+def print_stream_and_extract_code(stream: Iterable[str], expected_language: str) -> str:
+    global language
+    language = expected_language
+
+    def postprocess(s: str):
+        global language
+        md = extract_first_code_snippet_from_markdown(s)
+        language = md.language or expected_language
+        return md.code
+
+    def cancel(s: str):
+        md = extract_first_code_snippet_from_markdown(s)
+        return md.completed
+
+    def render(s: str):
+        return render_syntax(s, language)
+
+    return print_stream(stream, render=render, postprocess=postprocess, cancel=cancel)
 
 
 def limit_lines(text: str, n_lines: int) -> str:

@@ -7,7 +7,12 @@ from pathlib import Path
 import pyperclip
 
 from ai_scripts.lib.agent import Agent
-from ai_scripts.lib.logging import print_error, print_stream, render_syntax
+from ai_scripts.lib.logging import (
+    print_error,
+    print_stream,
+    print_stream_and_extract_code,
+    render_syntax,
+)
 from ai_scripts.lib.model import Models
 
 
@@ -71,15 +76,19 @@ def main():
         case Format.CODE:
             format_prompt = "with the updated the code snippet following the prompt."
             response_example = (
+                "```python\n"
                 "def say_hello(name: str):\n"  #
                 '    print(f"Hello {name}!")\n'
+                "```\n"
             )
         case Format.DIFF:
             format_prompt = "with a minimal diff of the changes following the prompt. Only include changes in the diff without the context."
             response_example = (
+                "```diff\n"
                 "@@ -2,2 +2,2 @@\n"
                 '-    print(f"Hello {name}")\n'
                 '+    print(f"Hello {name}!")\n'
+                "```\n"
             )
 
     answer = Agent(
@@ -90,23 +99,26 @@ def main():
             "\n"
             "Please comply with the following rules:\n"
             " - If the language is lua, assume it is used in the context of Neovim and doc comments target the lua-language-server"
+            " - ANSWER IN MARKDOWN\n"
             " - AVOID COMMENTARY OUTSIDE OF THE SNIPPET\n"
-            " - OMIT THE ``` WRAPPER IN YOUR RESPONSE\n"
             "\n"
             "\n"
             "EXAMPLE:\n"
             "language: python\n"
+            "\n"
             "prompt:\n"
-            "shout\n"
+            "shout hello\n"
+            "\n"
             "code:\n"
             "def say_hello(name: str):\n"
             '    print(f"Hello {name}")\n'
             "\n"
+            "```\n"
             "RESPONSE:\n" + response_example
         ),
         top_p=0.1,
     ).stream(f"language: {language}\nprompt:\n{prompt}\ncode:\n{code}\n")
-    answer = print_stream(answer, lambda s: render_syntax(s, language))
+    answer = print_stream_and_extract_code(answer, language)
     if file != "" and format == Format.DIFF:
         if input("Do you want to apply the patch (Y,n): ").lower() != "n":
             apply_patch(file, answer)

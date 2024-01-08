@@ -2,7 +2,9 @@
 import argparse
 import pyperclip
 
-from ai_scripts.lib.logging import print_stream, render_syntax
+from ai_scripts.lib.logging import (
+    print_stream_and_extract_code,
+)
 from ai_scripts.lib.agent import Agent
 from ai_scripts.lib.model import Models
 
@@ -36,36 +38,30 @@ def main():
             " - Prefer simple and short solutions\n"
             " - Avoid creating subprocesses if not strickly necessary\n"
             " - If not specified otherwise, USE LIBRARIES INSTEAD of implementing a custom solution\n"
+            " - ANSWER IN MARKDOWN\n"
             " - AVOID COMMENTARY OUTSIDE OF THE SNIPPET\n"
-            " - OMIT THE ``` WRAPPER IN YOUR RESPONSE\n"
             "\n"
             "\n"
             "EXAMPLE 1:\n"
             "language: python\n"
             "prompt:\n"
-            "say hello"
-            "\n"
-            "REPONSE:\n"
-            'print("Hello")\n'
-            "\n"
-            "\n"
-            "EXAMPLE 2:\n"
-            "language: python\n"
-            "prompt:\n"
             "a function that runs a command and returns stdout as a string\n"
             "\n"
             "REPONSE:\n"
+            "```python\n"
             "def run_cmd(cmd: List[str]) -> str:\n"
             '   """Runs the given command and returns stdout"""'
             '   return subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")\n'
+            "```\n"
             "\n"
             "\n"
-            "EXAMPLE 3:\n"
+            "EXAMPLE 2:\n"
             "language: lua\n"
             "prompt:\n"
             "a function to render a popup\n"
             "\n"
             "REPONSE:\n"
+            "```lua\n"
             "--- Renders a popup\n"
             "---@param opts { bufnr: number, width: number, height: number, title?: string, border?: string }\n"
             "---@return number\n"
@@ -82,10 +78,12 @@ def main():
             "  })\n"
             "  return win_id\n"
             "end\n"
+            "```\n"
         ),
         top_p=0.1,
+        presence_penalty=1,
     ).stream(f"language: {language}\n" f"prompt:\n{prompt}\n")
-    answer = print_stream(answer, lambda s: render_syntax(s, language))
+    answer = print_stream_and_extract_code(answer, language)
     pyperclip.copy(answer)
 
 
