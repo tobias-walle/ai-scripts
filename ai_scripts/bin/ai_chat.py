@@ -14,7 +14,7 @@ from ai_scripts.lib.dict import remove_none_values
 
 from ai_scripts.lib.logging import (
     COLOR_GRAY_1,
-    print,
+    print_error,
     print_step,
     print_stream,
     render_markdown,
@@ -95,7 +95,7 @@ def main():
         else:
             result = subprocess.call([editor, file])
             if result != 0:
-                print(f"Failed to open the editor. Error code: {result}")
+                print_error(f"Failed to open the editor. Error code: {result}")
                 sys.exit(1)
 
             md = file.read_text()
@@ -115,7 +115,6 @@ class Metadata(TypedDict):
 
 def parse_metadata(md: str) -> Metadata:
     parts = re.split(r"^---\n", md, flags=re.RegexFlag.MULTILINE)
-    print(parts)
     if len(parts) >= 2:
         front_matter = yaml.safe_load(parts[1])
         return front_matter
