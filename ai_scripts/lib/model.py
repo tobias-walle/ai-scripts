@@ -157,11 +157,12 @@ def togetherai_model(name: str, abbr: Optional[str]) -> Model:
 
 
 def ollama_model(model: str, name: str, abbr: Optional[str]) -> Model:
+    ollama_url = os.getenv("OLLAMA_URL") or "http://localhost:11434"
     return LangchainModel(
         name,
         abbr,
         ChatOllama(
-            base_url="http://localhost:11434",
+            base_url=ollama_url,
             model=model,
         ),
     )
@@ -179,6 +180,16 @@ class Models(Enum):
         "mistral:7b-instruct",
         "ollama/mistral:7b-instruct",
         "OM7",
+    )
+    OLLAMA_MISTRAL_OPENORCA = ollama_model(
+        "mistral-openorca",
+        "ollama/mistral-openorca",
+        "OMO",
+    )
+    OLLAMA_MIXTRAL_8_7B = ollama_model(
+        "mixtral:instruct",
+        "ollama/mixtral:instruct",
+        "OMX",
     )
 
     @classmethod
