@@ -6,6 +6,7 @@ import re
 import json
 from pathlib import Path
 import argparse
+from ai_scripts.lib.env import is_debbuging
 
 from ai_scripts.lib.logging import (
     print,
@@ -80,8 +81,11 @@ def main():
     )
 
     print_step("Add file paths to context")
-    files = run_cmd(["eza", "-R", "--git-ignore", "--icons=never"])
+    files = run_cmd(
+        ["eza", "-R", "--git-ignore", "--icons=never", "-I", "node_modules"]
+    )
     content.add_context("FILES", files, TOKEN_LIMIT_FILES)
+    content.dbg_log()
 
     print_step("Get relevant keywords")
     answer = keyword_agent.complete(str(content))
@@ -101,6 +105,7 @@ def main():
             min(3000, TOKEN_LIMIT_SEARCH - already_used_tokens_search),
         )
     content.add_context("SEARCH RESULT RELEVANT KEYWORDS", search, TOKEN_LIMIT_SEARCH)
+    content.dbg_log()
 
     readme_path = Path("./README.md")
     if readme_path.exists():
@@ -136,6 +141,7 @@ def main():
     content.add_context(
         "CONTENT OF SOME RELEVANT FILES", files_context, TOKEN_LIMIT_FILE_CONTENT
     )
+    content.dbg_log()
 
     print_step("Get final answer")
     answer = final_answer_agent.stream(str(content))
@@ -155,6 +161,10 @@ class Content:
                 f"- Limited context to {token_limit} (From {number_of_tokens(value)})"
             )
         return self.context.append(f"--- {prefix} ---\n{limited_value}")
+
+    def dbg_log(self):
+        if is_debbuging():
+            print(f"{self}\n")
 
     def __str__(self):
         context = "\n\n".join(self.context)
