@@ -9,9 +9,7 @@ import pyperclip
 from ai_scripts.lib.agent import Agent
 from ai_scripts.lib.logging import (
     print_error,
-    print_stream,
     print_stream_and_extract_code,
-    render_syntax,
 )
 from ai_scripts.lib.model import Models
 
@@ -27,10 +25,6 @@ def main():
         description="Rewrite something in the defined language based on the prompt",
     )
     parser.add_argument(
-        "language",
-        help="The target language",
-    )
-    parser.add_argument(
         "prompt",
         help="The prompt that describes how the code should be changed",
     )
@@ -39,6 +33,11 @@ def main():
         help="The code that should be changed",
         nargs="?",
         default=pyperclip.paste(),
+    )
+    parser.add_argument(
+        "-l",
+        "--language",
+        help="The target language. If not given it will be guessed by the model.",
     )
     parser.add_argument(
         "-f",
@@ -76,26 +75,61 @@ def main():
         case Format.CODE:
             format_prompt = "with the updated the code snippet following the prompt."
             response_example = (
-                "```python\n"
-                "def say_hello(name: str):\n"  #
-                '    print(f"Hello {name}!")\n'
+                "```typescript\n"
+                "import { Component, JSX } from 'solid-js';\n"
+                "\n"
+                "type Props = {\n"
+                "  type: 'button' | 'submit';\n"
+                "  disabled?: boolean;\n"
+                "  onClick?: () => void;\n"
+                "  children: JSX.Element;\n"
+                "};\n"
+                "\n"
+                "export const Button: Component<Props> = (props) => {\n"
+                "  return (\n"
+                "    <button\n"
+                "      type={props.type ?? 'button'}\n"
+                "      disabled={props.disabled}\n"
+                "      onClick={props.onClick}\n"
+                "    >\n"
+                "      {props.children}\n"
+                "    </button>\n"
+                "  );\n"
+                "};\n"
                 "```\n"
             )
         case Format.DIFF:
             format_prompt = "with a minimal diff of the changes following the prompt. Only include changes in the diff without the context."
             response_example = (
                 "```diff\n"
-                "@@ -2,2 +2,2 @@\n"
-                '-    print(f"Hello {name}")\n'
-                '+    print(f"Hello {name}!")\n'
+                "@@ -2,6 +2,7 @@\n"
+                " \n"
+                " type Props = {\n"
+                "   type: 'button' | 'submit';\n"
+                "+  disabled?: boolean;\n"
+                "   onClick?: () => void;\n"
+                "   children: JSX.Element;\n"
+                " };\n"
+                "@@ -10,6 +11,7 @@\n"
+                "   return (\n"
+                "     <button\n"
+                "       type={props.type ?? 'button'}\n"
+                "+      disabled={props.disabled}\n"
+                "       onClick={props.onClick}\n"
+                "     >\n"
+                "       {props.children}\n"
                 "```\n"
             )
 
+    message = f"prompt: {prompt}\n"
+    if language:
+        message += f"language: {language}\n"
+    message += f"code:\n{code}"
     answer = Agent(
         model=Models.get_from_env_or_default(),
         system_prompt=(
             "You are an AI working as a coding expert."
-            f"You are prompted with a prompt, a language and a code snippet and you are ONLY responding {format_prompt}\n"
+            f"You are prompted with a prompt and a code snippet and you are ONLY responding {format_prompt}\n"
             "\n"
             "Please comply with the following rules:\n"
             " - If the language is lua, assume it is used in the context of Neovim and doc comments target the lua-language-server"
@@ -104,20 +138,35 @@ def main():
             "\n"
             "\n"
             "EXAMPLE:\n"
-            "language: python\n"
-            "\n"
-            "prompt:\n"
-            "shout hello\n"
+            "code:\n"
+            "pass the disabled prop\n"
             "\n"
             "code:\n"
-            "def say_hello(name: str):\n"
-            '    print(f"Hello {name}")\n'
+            "```typescript\n"
+            "import { Component, JSX } from 'solid-js';\n"
             "\n"
+            "type Props = {\n"
+            "  type: 'button' | 'submit';\n"
+            "  onClick?: () => void;\n"
+            "  children: JSX.Element;\n"
+            "};\n"
+            "\n"
+            "export const Button: Component<Props> = (props) => {\n"
+            "  return (\n"
+            "    <button\n"
+            "      type={props.type ?? 'button'}\n"
+            "      onClick={props.onClick}\n"
+            "    >\n"
+            "      {props.children}\n"
+            "    </button>\n"
+            "  );\n"
+            "};\n"
             "```\n"
+            "\n"
             "RESPONSE:\n" + response_example
         ),
         top_p=0.1,
-    ).stream(f"language: {language}\nprompt:\n{prompt}\ncode:\n{code}\n")
+    ).stream(message)
     answer = print_stream_and_extract_code(answer, language)
     if file != "" and format == Format.DIFF:
         if input("Do you want to apply the patch (Y,n): ").lower() != "n":

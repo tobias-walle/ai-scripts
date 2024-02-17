@@ -31,6 +31,7 @@ The following scripts are currently implemented:
 - [implement](#implement)
 - [rewrite](#rewrite)
 - [find-docs](#find-docs)
+- [summarize](#summarize)
 - [ask-workspace](#ask-workspace)
 - [ai-chat](#ai-chat)
 
@@ -82,6 +83,14 @@ find-docs <prompt>
 Find documentation based on the given prompt.
 
 - `-s, --summary`: Summarizes the docs for you (optional).
+
+## summarize
+
+```sh
+summarize <text>
+```
+
+Summarize the given text. The text can be also piped via stdin.
 
 ## ask-workspace
 

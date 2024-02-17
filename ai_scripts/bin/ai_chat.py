@@ -5,7 +5,6 @@ from pathlib import Path
 import sys
 import subprocess
 from typing import Dict, List, NotRequired, Optional, TypeVar, TypedDict
-from openai.types.chat import ChatCompletionMessageParam
 from rich.console import Console
 import re
 import tempfile
@@ -19,7 +18,7 @@ from ai_scripts.lib.logging import (
     print_stream,
     render_markdown,
 )
-from ai_scripts.lib.model import Models
+from ai_scripts.lib.model import Message, Models
 from ai_scripts.lib.string import format_markdown
 
 
@@ -43,10 +42,17 @@ def main():
         "--system",
         help="Pass a sytem prompt directly (Only works if the file is empty or doesn't exists yet)",
     )
+    parser.add_argument(
+        "--editor",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Open an editor to chat",
+    )
     args = parser.parse_args()
     user_prompt: str = args.prompt or ""
     system_prompt: str = args.system or ""
     file_path: str = args.file or ""
+    editor_enabled: bool = args.editor
 
     if file_path == "":
         file_path = tempfile.NamedTemporaryFile(
@@ -86,17 +92,22 @@ def main():
             answer = print_stream(model.stream(chat, **model_options), render_markdown)
             md = add_message(md, "assistant", answer)
             md = add_message(md, "user", "")
+            md = format_markdown(md)
             file.write_text(format_markdown(md))
-            cancel = (
-                console.input(f"[{COLOR_GRAY_1}]Continue? [Y,n]: [/]").lower() == "n"
-            )
+            cancel = True
+            if editor_enabled:
+                cancel = (
+                    console.input(f"[{COLOR_GRAY_1}]Continue? [Y,n]: [/]").lower()
+                    == "n"
+                )
             if cancel:
                 break
         else:
-            result = subprocess.call([editor, file])
-            if result != 0:
-                print_error(f"Failed to open the editor. Error code: {result}")
-                sys.exit(1)
+            if editor_enabled:
+                result = subprocess.call([editor, file])
+                if result != 0:
+                    print_error(f"Failed to open the editor. Error code: {result}")
+                    sys.exit(1)
 
             md = file.read_text()
             last_msg = last_item(parse_chat(md))
@@ -122,7 +133,7 @@ def parse_metadata(md: str) -> Metadata:
         return {}
 
 
-def parse_chat(md: str) -> List[ChatCompletionMessageParam]:
+def parse_chat(md: str) -> List[Message]:
     messages: List[Dict[str, str]] = []
     message: Optional[Dict[str, str]] = None
     for line in md.strip().splitlines():
