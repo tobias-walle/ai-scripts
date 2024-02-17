@@ -99,7 +99,7 @@ def main():
                 "```\n"
             )
         case Format.DIFF:
-            format_prompt = "with a minimal diff of the changes following the prompt. Only include changes in the diff without the context."
+            format_prompt = "with a diff of the changes following the prompt. Always output a VALID DIFF that can be used by the `patch` command."
             response_example = (
                 "```diff\n"
                 "@@ -2,6 +2,7 @@\n"
