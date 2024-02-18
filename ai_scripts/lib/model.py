@@ -19,6 +19,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
+from ai_scripts.lib.env import is_debbuging
 
 from ai_scripts.lib.logging import print_status, print_step
 
@@ -61,7 +62,8 @@ class OpenAICompatibleModel(Model):
         self.abbr = abbr
 
     def complete(self, messages, **kwargs):
-        print_status(f"Using {self.name}")
+        if is_debbuging():
+            print_status(f"Using {self.name}")
         answer = self.client.chat.completions.create(
             model=self.name,
             messages=self.map_messages(messages),
@@ -71,7 +73,8 @@ class OpenAICompatibleModel(Model):
         return answer.choices[0].message.content or ""
 
     def stream(self, messages, **kwargs):
-        print_status(f"Using {self.name} (stream)")
+        if is_debbuging():
+            print_status(f"Using {self.name} (stream)")
         stream = self.client.chat.completions.create(
             model=self.name,
             messages=self.map_messages(messages),
@@ -105,12 +108,14 @@ class LangchainModel(Model):
         self.base_model = base_model
 
     def complete(self, messages, **kwargs) -> str:
-        print_status(f"Using {self.name}")
+        if is_debbuging():
+            print_status(f"Using {self.name}")
         answer = self.base_model.invoke(self.map_messages(messages), **kwargs)
         return str(answer.content)
 
     def stream(self, messages, **kwargs) -> Iterable[str]:
-        print_status(f"Using {self.name} (stream)")
+        if is_debbuging():
+            print_status(f"Using {self.name} (stream)")
         stream = self.base_model.stream(self.map_messages(messages), **kwargs)
         return (str(chunk.content) for chunk in stream)
 
