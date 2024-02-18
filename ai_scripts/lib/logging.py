@@ -42,21 +42,33 @@ def print_stream(
     cancel: Callable[[str], bool] = lambda _: False,
     prefix="",
 ) -> str:
-    with Live() as live:
-        buffer = prefix
+    buffer = prefix.lstrip()
+    if sys.stdout.isatty():
+        with Live() as live:
+            for token in stream:
+                buffer += token
+                rendered_buffer = postprocess(buffer)
+                rendered_buffer = limit_lines(rendered_buffer, live.console.height)
+                # First render the output on every update
+                live.update(render(rendered_buffer))
+                if cancel(buffer):
+                    break
+            live.update("")
+            buffer = postprocess(buffer)
+            # Then render buffer normally, so text wrapping works like you would expect
+            live.console.print(render(buffer))
+    else:
+        buffer_post = postprocess(buffer)
+        print(buffer_post, end="")
         for token in stream:
-            buffer += token
-            rendered_buffer = postprocess(buffer.lstrip())
-            rendered_buffer = limit_lines(rendered_buffer, live.console.height)
-            # First render the output on every update
-            live.update(render(rendered_buffer))
+            new_buffer = buffer + token
+            new_buffer_post = postprocess(new_buffer)
+            print(new_buffer_post.removeprefix(buffer_post), end="")
+            buffer = new_buffer
+            buffer_post = new_buffer_post
             if cancel(buffer):
                 break
-        live.update("")
-        buffer = postprocess(buffer.strip())
-        # Then render buffer normally, so text wrapping works like you would expect
-        live.console.print(render(buffer))
-    return buffer
+    return postprocess(buffer)
 
 
 def print_stream_and_extract_code(stream: Iterable[str], expected_language: str) -> str:
