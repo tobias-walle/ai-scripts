@@ -28,6 +28,7 @@ The following scripts are currently implemented:
 
 - [how](#how)
 - [explain](#explain)
+- [explain-code](#explain-code)
 - [implement](#implement)
 - [rewrite](#rewrite)
 - [find-docs](#find-docs)
@@ -50,6 +51,15 @@ explain <cli-command>
 ```
 
 Explains a cli command and it's options.
+
+
+## explain-code
+
+```sh
+explain <code>
+```
+
+Explains a piece of code by adding comments. If not code is passed as an argument tries to take it from the clipboard.
 
 ## implement
 

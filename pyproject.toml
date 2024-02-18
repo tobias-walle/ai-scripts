@@ -10,6 +10,7 @@ packages = [{ include = "ai_scripts" }]
 ask-workspace = "ai_scripts.bin.ask_workspace:main"
 how = "ai_scripts.bin.how:main"
 explain = "ai_scripts.bin.explain:main"
+explain-code = "ai_scripts.bin.explain_code:main"
 ai-chat = "ai_scripts.bin.ai_chat:main"
 implement = "ai_scripts.bin.implement:main"
 rewrite = "ai_scripts.bin.rewrite:main"
