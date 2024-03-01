@@ -21,7 +21,7 @@ def main():
     text_or_html = args.text or sys.stdin.read()
     text = BeautifulSoup(text_or_html, 'html.parser').get_text()
     answer = Agent(
-        model=Models.get_from_env_or_default(),
+        model=Models.get_from_env_or_default(Models.MIXTRAL_8_7B.value),
         system_prompt=(
             "You are an helpful AI assistance and professional summarizer. "
             "You are given a text and summarize it to its key points in a structured format."

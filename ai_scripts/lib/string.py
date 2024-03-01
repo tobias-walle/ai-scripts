@@ -17,7 +17,7 @@ def extract_first_code_snippet_from_markdown(markdown: str) -> ExtractedCode:
     number_ticks = 0
     completed = False
     language = None
-    for line in markdown.splitlines():
+    for line in markdown.strip().splitlines():
         if in_code_block:
             md_end_match = re.match(f"^(`{{{number_ticks}}}) *$", line)
             if md_end_match:
