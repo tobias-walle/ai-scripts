@@ -20,7 +20,13 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from ai_scripts.lib.env import is_debbuging
 
-from ai_scripts.lib.logging import print_status, print_step
+from ai_scripts.lib.logging import (
+    COLOR_GRAY_1,
+    COLOR_GRAY_2,
+    print_status,
+    print_step,
+    print,
+)
 
 
 class Message(TypedDict):
@@ -44,9 +50,35 @@ class Model(Protocol):
         messages: List[Message],
         **kwargs: Unpack[ChatOptions],
     ) -> str:
-        ...
+        if is_debbuging():
+            print_divider()
+            print_status(f"Using {self.name}")
+            print_messages(messages)
+            print_divider()
+            print()
+        return self._complete(messages, **kwargs)
 
     def stream(
+        self,
+        messages: List[Message],
+        **kwargs: Unpack[ChatOptions],
+    ) -> Iterable[str]:
+        if is_debbuging():
+            print_divider()
+            print_status(f"Using {self.name} (stream)")
+            print_messages(messages)
+            print_divider()
+            print()
+        return self._stream(messages, **kwargs)
+
+    def _complete(
+        self,
+        messages: List[Message],
+        **kwargs: Unpack[ChatOptions],
+    ) -> str:
+        ...
+
+    def _stream(
         self,
         messages: List[Message],
         **kwargs: Unpack[ChatOptions],
@@ -60,23 +92,19 @@ class OpenAICompatibleModel(Model):
         self.name = name
         self.abbr = abbr
 
-    def complete(self, messages, **kwargs):
-        if is_debbuging():
-            print_status(f"Using {self.name}")
+    def _complete(self, messages, **kwargs):
         answer = self.client.chat.completions.create(
             model=self.name,
-            messages=self.map_messages(messages),
+            messages=self._map_messages(messages),
             stream=False,
             **kwargs,
         )
         return answer.choices[0].message.content or ""
 
-    def stream(self, messages, **kwargs):
-        if is_debbuging():
-            print_status(f"Using {self.name} (stream)")
+    def _stream(self, messages, **kwargs):
         stream = self.client.chat.completions.create(
             model=self.name,
-            messages=self.map_messages(messages),
+            messages=self._map_messages(messages),
             stream=True,
             **kwargs,
         )
@@ -86,7 +114,9 @@ class OpenAICompatibleModel(Model):
             if chunk.choices[0].delta.content is not None
         )
 
-    def map_messages(self, messages: List[Message]) -> List[ChatCompletionMessageParam]:
+    def _map_messages(
+        self, messages: List[Message]
+    ) -> List[ChatCompletionMessageParam]:
         result: List[ChatCompletionMessageParam] = []
         for m in messages:
             if m["role"] == "system":
@@ -106,19 +136,15 @@ class LangchainModel(Model):
         self.abbr = abbr
         self.base_model = base_model
 
-    def complete(self, messages, **kwargs) -> str:
-        if is_debbuging():
-            print_status(f"Using {self.name}")
-        answer = self.base_model.invoke(self.map_messages(messages), **kwargs)
+    def _complete(self, messages, **kwargs) -> str:
+        answer = self.base_model.invoke(self._map_messages(messages), **kwargs)
         return str(answer.content)
 
-    def stream(self, messages, **kwargs) -> Iterable[str]:
-        if is_debbuging():
-            print_status(f"Using {self.name} (stream)")
-        stream = self.base_model.stream(self.map_messages(messages), **kwargs)
+    def _stream(self, messages, **kwargs) -> Iterable[str]:
+        stream = self.base_model.stream(self._map_messages(messages), **kwargs)
         return (str(chunk.content) for chunk in stream)
 
-    def map_messages(self, messages: List[Message]) -> LanguageModelInput:
+    def _map_messages(self, messages: List[Message]) -> LanguageModelInput:
         result: LanguageModelInput = []
         for m in messages:
             if m["role"] == "system":
@@ -216,3 +242,15 @@ class Models(Enum):
             f'Couldn\'t find model "{name}". Try to access it anyway on TogetherAI.'
         )
         return togetherai_model(name, None)
+
+
+def print_messages(messages: List[Message]):
+    for i, msg in enumerate(messages):
+        print(f"[{COLOR_GRAY_1}]Role:[/] {msg['role']}")
+        print(f"[{COLOR_GRAY_1}]Content:[/]\n{msg['content']}")
+        if i < len(messages) - 1:
+            print()
+
+
+def print_divider():
+    print(f"[{COLOR_GRAY_2}]-------------------------------------[/]")
