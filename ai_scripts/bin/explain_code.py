@@ -31,7 +31,7 @@ def main():
     message = ""
     if prompt is not None:
         message += f"{prompt}\n\n"
-    message = f"```\n{code}\n```"
+    message += f"```\n{code}\n```"
     answer = Agent(
         model=Models.get_from_env_or_default(),
         system_prompt=(
@@ -45,7 +45,7 @@ def main():
             "- Avoid commentary outside the code snippet. All text outside the snippet will be ignored."
         ),
         top_p=0.3,
-    ).stream(f"{code}")
+    ).stream(f"{message}")
     print_stream(answer, render_markdown)
 
 
