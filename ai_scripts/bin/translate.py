@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
-import sys
+
+import pyperclip
 
 from ai_scripts.lib.logging import print_stream, render_markdown
 from ai_scripts.lib.agent import Agent
@@ -24,7 +25,7 @@ def main():
     )
     args = parser.parse_args()
     language = args.language
-    text = args.text or sys.stdin.read()
+    text = args.text or pyperclip.paste()
     answer = Agent(
         model=Models.get_from_env_or_default(),
         system_prompt=(

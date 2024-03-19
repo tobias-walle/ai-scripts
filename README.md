@@ -34,6 +34,7 @@ The following scripts are currently implemented:
 - [find-docs](#find-docs)
 - [summarize](#summarize)
 - [translate](#translate)
+- [spellcheck](#spellcheck)
 - [ask-workspace](#ask-workspace)
 - [ai-chat](#ai-chat)
 
@@ -109,6 +110,14 @@ translate -l spain <text>
 ```
 
 Translate the given text to the specified language. The text can be also piped via stdin.
+
+## spellcheck
+
+```sh
+spellcheck <text>
+```
+
+Spellcheck the given text. If no text if given, the text will be parsed from the clipboard.
 
 ## ask-workspace
 
