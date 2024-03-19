@@ -16,6 +16,7 @@ implement = "ai_scripts.bin.implement:main"
 rewrite = "ai_scripts.bin.rewrite:main"
 find-docs = "ai_scripts.bin.find_docs:main"
 summarize = "ai_scripts.bin.summarize:main"
+translate = "ai_scripts.bin.translate:main"
 
 [tool.poetry.dependencies]
 python = ">=3.11.7,<4.0"

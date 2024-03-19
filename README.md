@@ -33,6 +33,7 @@ The following scripts are currently implemented:
 - [rewrite](#rewrite)
 - [find-docs](#find-docs)
 - [summarize](#summarize)
+- [translate](#translate)
 - [ask-workspace](#ask-workspace)
 - [ai-chat](#ai-chat)
 
@@ -51,7 +52,6 @@ explain <cli-command>
 ```
 
 Explains a cli command and it's options.
-
 
 ## explain-code
 
@@ -101,6 +101,14 @@ summarize <text>
 ```
 
 Summarize the given text. The text can be also piped via stdin.
+
+## translate
+
+```sh
+translate -l spain <text>
+```
+
+Translate the given text to the specified language. The text can be also piped via stdin.
 
 ## ask-workspace
 
