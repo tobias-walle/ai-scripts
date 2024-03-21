@@ -15,6 +15,7 @@ from langchain_core.language_models import LanguageModelInput
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_community.chat_models import ChatOllama
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_anthropic import ChatAnthropic
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -198,6 +199,16 @@ def ollama_model(model: str, name: str, abbr: Optional[str]) -> Model:
     )
 
 
+def anthropic_model(model: str, name: str, abbr: Optional[str]) -> Model:
+    return LangchainModel(
+        name,
+        abbr,
+        ChatAnthropic(
+            model_name=model,
+        ),
+    )
+
+
 class Models(Enum):
     GPT_4_TURBO = openai_model("gpt-4-1106-preview", "G4")
     MIXTRAL_8_7B = togetherai_model("mistralai/Mixtral-8x7B-Instruct-v0.1", "M8")
@@ -205,6 +216,21 @@ class Models(Enum):
     MISTRAL_TINY = mistralai_model("mistral-tiny", "MT")
     MISTRAL_SMALL = mistralai_model("mistral-small", "MS")
     MISTRAL_MEDIUM = mistralai_model("mistral-medium", "MM")
+    CLAUDE_3_OPUS = anthropic_model(
+        "claude-3-opus-20240229",
+        "claude-3-opus",
+        "C3O",
+    )
+    CLAUDE_3_SONNET = anthropic_model(
+        "claude-3-sonnet-20240229",
+        "claude-3-sonnet",
+        "C3S",
+    )
+    CLAUDE_3_HAIKU = anthropic_model(
+        "claude-3-haiku-20240307",
+        "claude-3-haiku",
+        "C3H",
+    )
 
     OLLAMA_MISTRAL_7B = ollama_model(
         "mistral:7b-instruct",
